@@ -8,13 +8,15 @@ import javax.security.sasl.*;
 import java.io.IOException;
 import java.util.Map;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 /**
  * Show example Sasl Usage
  */
-public class SaslExample {
+public class SaslMd5DigestExampleTest {
 
     final String[] digestMd5 = {"DIGEST-MD5"};
     final Map<String, ?> noProps = ImmutableMap.of();
@@ -23,7 +25,7 @@ public class SaslExample {
     public void testSaslDigestMd5() throws Exception {
         final SaslClient client = Sasl.createSaslClient(
                 digestMd5,
-                "user", "protocol", "serverName", null,
+                "myAuthorizationId", "protocol", "my_realm", null,
                 new CallbackHandler() {
                     @Override
                     public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
@@ -31,35 +33,47 @@ public class SaslExample {
                         // the username given to createSaslClient static constructor.
                         for (Callback callback : callbacks) {
                             if (callback instanceof RealmCallback) {
-                                // realm of the server is defaulted to serverName
-                                ((RealmCallback) callback).setText("serverName");
+                                // realm of the server is defaulted to my_realm
+                                ((RealmCallback) callback).setText("my_realm");
                             } else if (callback instanceof NameCallback) {
-                                ((NameCallback) callback).setName("user");
+                                ((NameCallback) callback).setName("bob");
                             } else if (callback instanceof PasswordCallback) {
-                                ((PasswordCallback) callback).setPassword("pass".toCharArray());
+                                ((PasswordCallback) callback).setPassword("bob's pass".toCharArray());
                             }
                         }
                     }
                 }
         );
         final SaslServer server = Sasl.createSaslServer(
-                digestMd5[0], "protocol", "serverName", noProps,
+                digestMd5[0], "protocol", "my_realm", noProps,
                 new CallbackHandler() {
                     @Override
                     public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
+                        String user = null;
+                        PasswordCallback passwordCb = null;
                         for (Callback callback : callbacks) {
                             // Set required username and password, framework will verify they match
                             if (callback instanceof RealmCallback) {
-                                ((RealmCallback) callback).setText("default");
+                                assertThat(((RealmCallback) callback).getDefaultText(),
+                                    is(equalTo("my_realm")));
                             } else if (callback instanceof NameCallback) {
-                                ((NameCallback) callback).setName("user");
+                                user = ((NameCallback) callback).getDefaultName();
                             } else if (callback instanceof PasswordCallback) {
-                                ((PasswordCallback) callback).setPassword("pass".toCharArray());
+                                passwordCb = (PasswordCallback) callback;
                             }
-                            // Check if the user is authorized to login
                             if (callback instanceof AuthorizeCallback) {
-                                ((AuthorizeCallback) callback).setAuthorized(true);
+                                // always allow valid user
+                                final AuthorizeCallback cb = (AuthorizeCallback) callback;
+                                assertThat(cb.getAuthorizationID(), equalTo("myAuthorizationId"));
+                                cb.setAuthorized(true);
                             }
+                        }
+                        ImmutableMap<String, char[]> usersDb = ImmutableMap.of(
+                                "bob", "bob's pass".toCharArray(),
+                                "admin", "secret pass".toCharArray()
+                        );
+                        if (usersDb.containsKey(user) && passwordCb != null) {
+                            passwordCb.setPassword(usersDb.get(user));
                         }
                     }
                 }
@@ -74,15 +88,6 @@ public class SaslExample {
         assertThat(server.isComplete(), is(true));
         assertThat(client.evaluateChallenge(resp), is(nullValue()));
         assertThat(client.isComplete(), is(true));
-    }
-
-    @Test
-    public void testSaslGssapi() throws Exception {
-        Sasl.createSaslClient(
-                new String[]{"GSSAPI", "GSSAPI"},
-                null, null, null, null, null
-        );
-
     }
 
 }
