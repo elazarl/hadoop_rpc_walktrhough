@@ -33,13 +33,14 @@ public class SaslGssapiExampleTest {
             Subject serverSubject = getServerKdcSubject(kdc);
             Subject clientSubject = SubjectgetClientKdcSubject(kdc);
 
-            final SaslClient client = (SaslClient) Subject.doAs(clientSubject, new PrivilegedAction<Object>() {
+            final SaslClient client = Subject.doAs(clientSubject, new PrivilegedAction<SaslClient>() {
                 @Override
-                public Object run() {
+                public SaslClient run() {
                     try {
                         return Sasl.createSaslClient(
                                 new String[]{"GSSAPI"},
-                                // authzId is not needed in general, see http://www.openldap.org/lists/openldap-devel/200011/msg00036.html
+                                // authzId is not needed in general,
+                                // see http://www.openldap.org/lists/openldap-devel/200011/msg00036.html
                                 null,
                                 "server", kdc.getRealm(),
                                 null, null
@@ -49,9 +50,9 @@ public class SaslGssapiExampleTest {
                     }
                 }
             });
-            SaslServer server = (SaslServer) Subject.doAs(serverSubject, new PrivilegedAction<Object>() {
+            SaslServer server = Subject.doAs(serverSubject, new PrivilegedAction<SaslServer>() {
                 @Override
-                public Object run() {
+                public SaslServer run() {
                     try {
                         return Sasl.createSaslServer("GSSAPI", "server", kdc.getRealm(), null, new CallbackHandler() {
                             @Override
