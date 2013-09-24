@@ -1,5 +1,6 @@
 package com.github.elazar.hadoop.examples;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 
@@ -8,9 +9,7 @@ import javax.security.sasl.*;
 import java.io.IOException;
 import java.util.Map;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 
 /**
@@ -19,13 +18,15 @@ import static org.junit.Assert.assertThat;
 public class SaslMd5DigestExampleTest {
 
     final String[] digestMd5 = {"DIGEST-MD5"};
-    final Map<String, ?> noProps = ImmutableMap.of();
+    final Map<String, ?> qopProp = ImmutableMap.of(
+            Sasl.QOP, "auth-conf"
+    );
 
     @Test
     public void testSaslDigestMd5() throws Exception {
         final SaslClient client = Sasl.createSaslClient(
                 digestMd5,
-                "myAuthorizationId", "protocol", "my_realm", null,
+                "myAuthorizationId", "protocol", "my_realm", qopProp,
                 new CallbackHandler() {
                     @Override
                     public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
@@ -45,7 +46,7 @@ public class SaslMd5DigestExampleTest {
                 }
         );
         final SaslServer server = Sasl.createSaslServer(
-                digestMd5[0], "protocol", "my_realm", noProps,
+                digestMd5[0], "protocol", "my_realm", qopProp,
                 new CallbackHandler() {
                     @Override
                     public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
@@ -88,6 +89,12 @@ public class SaslMd5DigestExampleTest {
         assertThat(server.isComplete(), is(true));
         assertThat(client.evaluateChallenge(resp), is(nullValue()));
         assertThat(client.isComplete(), is(true));
+
+        byte[] content = "abcdefg".getBytes(Charsets.US_ASCII);
+        final byte[] wrapped = server.wrap(content, 0, content.length);
+        assertThat(wrapped, is(not(equalTo(content))));
+        assertThat(client.unwrap(wrapped, 0, wrapped.length),
+                is(equalTo(content)));
     }
 
 }
