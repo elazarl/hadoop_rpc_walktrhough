@@ -18,8 +18,12 @@
         <repository>
             <id>apache-repository</id>
             <name>Apache Repository</name>
-            <url>https://repository.apache.org/service/local/repositories/orgapachehadoop-039/content/</url>
+            <url>https://repository.apache.org/service/local/repositories/orgapachehadoop-099/content/</url>
         </repository>
+        <!--repository>
+            <id>apache-snapshots</id>
+            <url>https://repository.apache.org/content/repositories/snapshots</url>
+        </repository-->
         <repository>
             <id>local</id>
             <url>file://${basedir}/lib</url>
@@ -29,17 +33,24 @@
   <dependencies>
     <dependency>
         <groupId>org.apache.hadoop</groupId>
-        <artifactId>hadoop-common</artifactId>
+        <artifactId>hadoop-client</artifactId>
         <version>2.1.0-beta</version>
     </dependency>
+      <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-hdfs</artifactId>
+          <version>2.1.0-beta</version>
+      </dependency>
 
     <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-minikdc</artifactId>
         <version>3.0.0-SNAPSHOT</version>
+        <scope>test</scope>
     </dependency>
 
-    <dependency>
+
+      <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.11</version>

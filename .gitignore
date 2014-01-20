@@ -2,3 +2,4 @@ target/
 go_hadoop_rpc/go_hadoop_rpc
 *.iml
 .*.swp
+.idea
