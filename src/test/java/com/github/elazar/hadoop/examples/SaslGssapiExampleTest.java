@@ -2,6 +2,7 @@ package com.github.elazar.hadoop.examples;
 
 import com.google.common.collect.ImmutableMap;
 import org.apache.hadoop.minikdc.MiniKdc;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.security.auth.Subject;
@@ -22,6 +23,7 @@ import static org.junit.Assert.assertThat;
 /**
  * Show simple use of GSSAPI SASL authentication
  */
+@Ignore
 public class SaslGssapiExampleTest {
 
     @Test
